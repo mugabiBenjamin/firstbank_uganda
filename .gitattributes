@@ -1,0 +1,17 @@
+# Normalize line endings automatically for all text files
+* text=auto
+
+# Force LF for Java and XML source files
+*.java text eol=lf
+*.xml  text eol=lf
+*.md   text eol=lf
+*.sql  text eol=lf
+*.txt  text eol=lf
+*.properties text eol=lf
+
+# Binary files — never touch line endings
+*.accdb binary
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jar   binary

@@ -1,0 +1,30 @@
+# Maven build output
+target/
+
+# IDE — IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE — Eclipse
+.classpath
+.project
+.settings/
+
+# IDE — VS Code
+.vscode/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Compiled class files (shouldn't be outside target/ but just in case)
+*.class
+
+# Log files
+*.log
+
+# Runtime-generated DB lock files (UCanAccess creates these)
+*.lck
+*.tmp

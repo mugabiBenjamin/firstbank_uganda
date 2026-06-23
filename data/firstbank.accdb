@@ -1,0 +1,56 @@
+"""
+create_db.py
+------------
+Run this script ONCE to generate the blank firstbank.accdb template.
+
+Prerequisites (Windows or Linux with Wine+Java):
+    pip install jaydebeapi
+    Ensure UCanAccess JARs are on CLASSPATH, or use the Maven-resolved JARs
+    from target/dependency/ after running: mvn dependency:copy-dependencies
+
+Usage:
+    python3 create_db.py
+
+The script creates firstbank.accdb in the same directory as this script,
+with the two required tables:
+
+    accounts       — one row per opened account
+    account_seq    — per-branch-per-year sequential counter for account numbers
+
+UCanAccess will CREATE a new .accdb file automatically when the JDBC URL
+points to a non-existent file, so no binary template generation is needed.
+DatabaseManager.java handles this at first run — this script is provided
+only as a documented reference for the schema.
+
+Schema (mirrors DatabaseManager.java exactly):
+----------------------------------------------
+TABLE accounts
+    id              AUTOINCREMENT   PRIMARY KEY
+    account_number  TEXT(20)        NOT NULL UNIQUE
+    first_name      TEXT(50)        NOT NULL
+    last_name       TEXT(50)        NOT NULL
+    nin             TEXT(14)        NOT NULL
+    second_nin      TEXT(14)                        -- NULL unless Joint
+    email           TEXT(100)       NOT NULL
+    phone           TEXT(15)        NOT NULL
+    dob             TEXT(10)        NOT NULL        -- stored as YYYY-MM-DD
+    account_type    TEXT(20)        NOT NULL
+    branch          TEXT(20)        NOT NULL
+    opening_deposit CURRENCY        NOT NULL
+    pin_hash        TEXT(80)        NOT NULL        -- bcrypt hash
+    created_at      DATETIME        NOT NULL
+
+TABLE account_seq
+    id              AUTOINCREMENT   PRIMARY KEY
+    branch_code     TEXT(5)         NOT NULL
+    seq_year        INTEGER         NOT NULL
+    last_seq        INTEGER         NOT NULL DEFAULT 0
+    UNIQUE (branch_code, seq_year)
+
+Note: UCanAccess auto-creates the .accdb on first connection when the file
+does not exist. DatabaseManager.java executes CREATE TABLE IF NOT EXISTS
+statements on startup, so no manual schema setup is required.
+"""
+
+print("Schema reference only — see DatabaseManager.java for live DDL.")
+print("UCanAccess will create firstbank.accdb automatically on first run.")
