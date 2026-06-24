@@ -22,31 +22,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Exports an {@link AccountRecord} to a formatted PDF summary document.
- *
- * <p>Produces a single-page A4 PDF containing the bank letterhead, a
- * labelled two-column summary table, and a generation timestamp. The output
- * file path is chosen by the caller (via a JavaFX {@code FileChooser} in
- * the UI layer — this class knows nothing about JavaFX).</p>
- *
- * <p><b>SOLID notes:</b></p>
- * <ul>
- *   <li><b>SRP</b> — owns one concern: converting an {@link AccountRecord}
- *       into a PDF file. No UI code, no DB code, no validation.</li>
- *   <li><b>DIP</b> — the UI calls {@link #export(AccountRecord, File)} and
- *       receives a typed result; it never touches iText directly, so
- *       swapping the PDF library requires changing only this file.</li>
- *   <li><b>OCP</b> — adding a new section to the PDF (e.g. terms and
- *       conditions footer) means adding a private helper method and one call
- *       in {@link #export}; existing helpers are untouched.</li>
- * </ul>
- *
- * <p>Uses iText 5 ({@code com.itextpdf:itextpdf}) as declared in
- * {@code pom.xml}.</p>
- *
- * <p>All methods are {@code static}; the class is not instantiable.</p>
- */
 public final class PdfExporter {
 
     // ── Brand colours (First Bank Uganda) ───────────────────────────────────
@@ -89,19 +64,6 @@ public final class PdfExporter {
 
     // ── Public API ───────────────────────────────────────────────────────────
 
-    /**
-     * Exports {@code record} to a PDF file at {@code destination}.
-     *
-     * <p>The caller (UI layer) is responsible for obtaining a valid file path
-     * via a {@code FileChooser} before calling this method.</p>
-     *
-     * @param record      the validated, persisted account record to export;
-     *                    must not be {@code null}
-     * @param destination the target {@code .pdf} file; parent directories
-     *                    must already exist
-     * @throws IOException       if the file cannot be written
-     * @throws DocumentException if iText encounters a layout error
-     */
     public static void export(AccountRecord record, File destination)
             throws IOException, DocumentException {
 
