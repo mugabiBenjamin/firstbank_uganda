@@ -1,6 +1,9 @@
 # Maven build output
 target/
 
+# UCanAccess / HSQLDB working directory
+data/Ucanaccess_*
+
 # IDE — IntelliJ IDEA
 .idea/
 *.iml
@@ -28,6 +31,7 @@ Thumbs.db
 # Runtime-generated DB lock files (UCanAccess creates these)
 *.lck
 *.tmp
+
 .github/
 
 *repomix-output.xml
