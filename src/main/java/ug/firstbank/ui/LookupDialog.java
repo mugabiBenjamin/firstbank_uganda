@@ -17,7 +17,10 @@ import javafx.stage.Window;
 import ug.firstbank.model.AccountRecord;
 import ug.firstbank.service.AccountService;
 import ug.firstbank.util.CurrencyFormatter;
+import ug.firstbank.util.PdfExporter;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +30,11 @@ public final class LookupDialog {
     private final Stage dialogStage;
     private final AccountService accountService;
     private final TextArea resultsArea = new TextArea();
+    private final Button exportPdfButton = new Button("Export to PDF");
+
+    // Store last search result for PDF export
+    private AccountRecord lastSingleRecord = null;
+    private List<AccountRecord> lastMultipleRecords = null;
 
     public LookupDialog(Window owner, AccountService accountService) {
         this.accountService = accountService;
@@ -34,7 +42,7 @@ public final class LookupDialog {
         this.dialogStage.setTitle("Find Account — First Bank Uganda");
         this.dialogStage.initOwner(owner);
         this.dialogStage.initModality(Modality.WINDOW_MODAL);
-        this.dialogStage.setScene(new javafx.scene.Scene(build(), 520, 460));
+        this.dialogStage.setScene(new javafx.scene.Scene(build(), 520, 500));
     }
 
     public void showAndWait() {
@@ -52,7 +60,15 @@ public final class LookupDialog {
         resultsArea.setPromptText("Search results will appear here.");
         VBox.setVgrow(resultsArea, Priority.ALWAYS);
 
-        VBox container = new VBox(12, tabPane, new Label("Results"), resultsArea);
+        // Export button styling and behavior
+        exportPdfButton.getStyleClass().add("secondary-button");
+        exportPdfButton.setDisable(true);
+        exportPdfButton.setOnAction(e -> handleExportPdf());
+
+        HBox actions = new HBox(exportPdfButton);
+        actions.getStyleClass().add("summary-actions");
+
+        VBox container = new VBox(12, tabPane, new Label("Results"), resultsArea, actions);
         container.setPadding(new Insets(16));
         return container;
     }
@@ -101,12 +117,21 @@ public final class LookupDialog {
         try {
             Optional<AccountRecord> result = accountService.findByAccountNumber(accountNumber);
             if (result.isPresent()) {
-                resultsArea.setText(formatRecord(result.get()));
+                AccountRecord record = result.get();
+                lastSingleRecord = record;
+                lastMultipleRecords = null;
+
+                resultsArea.setText(formatRecord(record));
+                exportPdfButton.setDisable(false);
             } else {
                 resultsArea.setText("No account found with number: " + accountNumber);
+                exportPdfButton.setDisable(true);
+                lastSingleRecord = null;
+                lastMultipleRecords = null;
             }
         } catch (SQLException e) {
             showError("Lookup failed: " + e.getMessage());
+            exportPdfButton.setDisable(true);
         }
     }
 
@@ -119,8 +144,12 @@ public final class LookupDialog {
 
         try {
             List<AccountRecord> results = accountService.findByNin(nin);
+            lastMultipleRecords = results;
+            lastSingleRecord = null;
+
             if (results.isEmpty()) {
                 resultsArea.setText("No accounts found for NIN: " + nin);
+                exportPdfButton.setDisable(true);
                 return;
             }
 
@@ -129,8 +158,11 @@ public final class LookupDialog {
                 text.append(formatRecord(record)).append("\n\n");
             }
             resultsArea.setText(text.toString().trim());
+            exportPdfButton.setDisable(false);   // Enable even for multiple results
+
         } catch (SQLException e) {
             showError("Lookup failed: " + e.getMessage());
+            exportPdfButton.setDisable(true);
         }
     }
 
@@ -142,6 +174,31 @@ public final class LookupDialog {
                 + "Opening Deposit: " + CurrencyFormatter.format(record.getOpeningDeposit());
     }
 
+    private void handleExportPdf() {
+        if (lastSingleRecord != null) {
+            // Single record export (cleanest)
+            exportSingleRecord(lastSingleRecord);
+        } else if (lastMultipleRecords != null && !lastMultipleRecords.isEmpty()) {
+            // Multiple records - export first one for now (can be enhanced later)
+            exportSingleRecord(lastMultipleRecords.get(0));
+        } else {
+            showWarning("No account data available to export.");
+        }
+    }
+
+    private void exportSingleRecord(AccountRecord record) {
+        File destination = new File(System.getProperty("user.home"),
+                record.getAccountNumber() + "_lookup_summary.pdf");
+
+        try {
+            PdfExporter.export(record, destination);
+            showInfo("Summary exported successfully",
+                    "Saved to: " + destination.getAbsolutePath());
+        } catch (IOException | com.itextpdf.text.DocumentException e) {
+            showError("Export failed: " + e.getMessage());
+        }
+    }
+
     private void showWarning(String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING, message);
         alert.initOwner(dialogStage);
@@ -150,6 +207,13 @@ public final class LookupDialog {
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message);
+        alert.initOwner(dialogStage);
+        alert.showAndWait();
+    }
+
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
+        alert.setTitle(title);
         alert.initOwner(dialogStage);
         alert.showAndWait();
     }

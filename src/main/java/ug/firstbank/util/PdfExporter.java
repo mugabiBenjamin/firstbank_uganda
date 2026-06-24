@@ -64,7 +64,7 @@ public final class PdfExporter {
 
     // ── Public API ───────────────────────────────────────────────────────────
 
-    public static void export(AccountRecord record, File destination)
+        public static void export(AccountRecord record, File destination)
             throws IOException, DocumentException {
 
         Document doc = new Document(PageSize.A4, 50f, 50f, 60f, 60f);
@@ -80,8 +80,18 @@ public final class PdfExporter {
             doc.add(buildSummaryTable(record));
             doc.add(Chunk.NEWLINE);
             doc.add(buildFooter(record));
+
+            // Let try-with-resources handle stream closure
+            // iText will close properly when document is closed
+            doc.close();
+
         } finally {
-            if (doc.isOpen()) doc.close();
+            if (doc.isOpen()) {
+                try {
+                    doc.close();
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 
