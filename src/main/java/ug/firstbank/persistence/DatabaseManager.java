@@ -11,51 +11,11 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Manages the JDBC connection to the MS Access (.accdb) database via the
- * UCanAccess bridge, and bootstraps the schema on first run.
- *
- * <p><b>Responsibilities (SRP):</b></p>
- * <ol>
- *   <li>Resolve the database file path from the {@code app.db.path} system
- *       property (set via Maven's {@code javafx-maven-plugin} options in
- *       {@code pom.xml}), falling back to a path relative to the JAR
- *       location — ensuring portability across Ubuntu (dev) and Windows
- *       (runtime) without any hardcoded paths.</li>
- *   <li>Open and lazily cache a single shared {@link Connection}.</li>
- *   <li>Execute {@code CREATE TABLE IF NOT EXISTS} DDL on first connection
- *       so the schema self-bootstraps — no manual SQL scripts required.</li>
- *   <li>Provide a {@link #close()} method so callers (e.g. the JavaFX
- *       {@code Application.stop()} hook) can release the connection cleanly.</li>
- * </ol>
- *
- * <p><b>SOLID notes:</b></p>
- * <ul>
- *   <li><b>SRP</b> — only connection management and DDL live here.
- *       Query logic belongs in {@link AccountRepository}.</li>
- *   <li><b>OCP</b> — the DDL block is a private method; adding a new table
- *       means adding one {@code CREATE TABLE IF NOT EXISTS} statement inside
- *       {@link #bootstrapSchema(Connection)} with no other changes.</li>
- *   <li><b>DIP</b> — {@link AccountRepository} and {@link SequenceGenerator}
- *       receive a {@link Connection} injected by this class; they never call
- *       {@code DriverManager} directly.</li>
- * </ul>
- *
- * <p>UCanAccess creates the {@code .accdb} file automatically when the JDBC
- * URL points to a non-existent path — no binary template is needed in the
- * repository.</p>
- */
 public final class DatabaseManager {
 
     private static final Logger LOG =
             Logger.getLogger(DatabaseManager.class.getName());
 
-    /**
-     * System property key set by the JavaFX Maven plugin via
-     * {@code <option>-Dapp.db.path=data/firstbank.accdb</option>}
-     * in {@code pom.xml}. When running from a packaged JAR without Maven,
-     * the fallback path resolution kicks in.
-     */
     private static final String DB_PATH_PROPERTY = "app.db.path";
 
     /** Default relative path used when the system property is absent. */
@@ -66,20 +26,6 @@ public final class DatabaseManager {
 
     // ── Connection lifecycle ─────────────────────────────────────────────────
 
-    /**
-     * Returns the shared {@link Connection}, opening it on first call.
-     *
-     * <p>The database file is resolved in this order:</p>
-     * <ol>
-     *   <li>{@code -Dapp.db.path} system property (set by Maven plugin)</li>
-     *   <li>Sibling {@code data/firstbank.accdb} relative to the directory
-     *       containing the running JAR</li>
-     *   <li>Current working directory fallback</li>
-     * </ol>
-     *
-     * @return an open {@link Connection}
-     * @throws SQLException if the connection cannot be established
-     */
     public synchronized Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             connection = openConnection();
@@ -88,10 +34,6 @@ public final class DatabaseManager {
         return connection;
     }
 
-    /**
-     * Closes the shared connection if it is open.
-     * Should be called from {@code Application.stop()}.
-     */
     public synchronized void close() {
         if (connection != null) {
             try {
@@ -109,18 +51,6 @@ public final class DatabaseManager {
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    /**
-     * Opens a UCanAccess JDBC connection to the resolved {@code .accdb} file.
-     *
-     * <p>UCanAccess connection options used:</p>
-     * <ul>
-     *   <li>{@code memory=false} — keeps the Jackcess working copy on disk
-     *       rather than fully in heap; safer for larger databases.</li>
-     *   <li>{@code openLinksAsWriteable=true} — required for INSERT/UPDATE.</li>
-     *   <li>{@code ignoreCase=true} — makes string comparisons case-insensitive,
-     *       matching MS Access default behaviour.</li>
-     * </ul>
-     */
     private Connection openConnection() throws SQLException {
         File dbFile = resolveDbFile();
         LOG.info("Connecting to database: " + dbFile.getAbsolutePath());
@@ -139,17 +69,6 @@ public final class DatabaseManager {
         return DriverManager.getConnection(url);
     }
 
-    /**
-     * Resolves the database file path without hardcoding any absolute path.
-     *
-     * <p>Priority:</p>
-     * <ol>
-     *   <li>{@code -Dapp.db.path} — relative paths are resolved against the
-     *       current working directory (which Maven sets to the project root).</li>
-     *   <li>Sibling {@code data/firstbank.accdb} next to the JAR file.</li>
-     *   <li>Current working directory as last resort.</li>
-     * </ol>
-     */
     private File resolveDbFile() {
         String prop = System.getProperty(DB_PATH_PROPERTY);
         if (prop != null && !prop.isBlank()) {
@@ -176,23 +95,6 @@ public final class DatabaseManager {
         }
     }
 
-    /**
-     * Creates all required tables if they do not already exist.
-     *
-     * <p>UCanAccess supports a subset of SQL DDL; the statements below use
-     * only constructs that UCanAccess 5.x recognises.</p>
-     *
-     * <p><b>Tables:</b></p>
-     * <ul>
-     *   <li>{@code accounts} — one row per opened account.</li>
-     *   <li>{@code account_seq} — per-branch-per-year sequential counter;
-     *       the unique constraint on {@code (branch_code, seq_year)} ensures
-     *       the counter survives application restarts correctly.</li>
-     * </ul>
-     *
-     * @param conn an open connection on which to execute DDL
-     * @throws SQLException if DDL execution fails
-     */
     private void bootstrapSchema(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
 
