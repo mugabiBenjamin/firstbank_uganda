@@ -68,10 +68,21 @@ public final class MainWindow {
     public Scene buildScene() {
         BorderPane root = new BorderPane();
         root.setTop(buildMenuBar());
-        root.setCenter(buildContent());
+
+        javafx.scene.control.ScrollPane scrollPane =
+                new javafx.scene.control.ScrollPane(buildContent());
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.getStyleClass().add("app-scroll");
+        root.setCenter(scrollPane);
         root.getStyleClass().add("app-root");
 
-        Scene scene = new Scene(root, 980, 760);
+        javafx.geometry.Rectangle2D screenBounds =
+                javafx.stage.Screen.getPrimary().getVisualBounds();
+        double sceneWidth = Math.min(980, screenBounds.getWidth() - 40);
+        double sceneHeight = Math.min(760, screenBounds.getHeight() - 40);
+
+        Scene scene = new Scene(root, sceneWidth, sceneHeight);
         scene.getStylesheets().add(buildStylesheetUrl());
         return scene;
     }
