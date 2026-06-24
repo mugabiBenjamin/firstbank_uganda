@@ -9,6 +9,7 @@ data/Ucanaccess_*
 *.iml
 *.iws
 *.ipr
+nbactions.xml
 
 # IDE — Eclipse
 .classpath
