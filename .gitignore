@@ -28,3 +28,4 @@ Thumbs.db
 # Runtime-generated DB lock files (UCanAccess creates these)
 *.lck
 *.tmp
+.github/
