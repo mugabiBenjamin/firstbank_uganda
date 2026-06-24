@@ -9,34 +9,6 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.regex.Pattern;
 
-/**
- * Orchestrates all form-level validation for the account-opening application.
- *
- * <p>Accepts raw string inputs (exactly as the user typed them), runs every
- * rule defined in the specification, and returns a single
- * {@link ValidationResult} that maps each offending field to its error message.
- * A result with no errors means the form is ready to submit.</p>
- *
- * <p><b>SOLID notes:</b></p>
- * <ul>
- *   <li><b>SRP</b> — this class owns validation orchestration only.
- *       NIN format logic lives in {@link NinValidator}; account-type rules
- *       live in the {@code model} subclasses; error data lives in
- *       {@link ValidationResult}.</li>
- *   <li><b>OCP</b> — adding a new field means adding one private helper method
- *       and one call in {@link #validate}; nothing else changes.</li>
- *   <li><b>LSP</b> — deposit validation delegates to
- *       {@code account.isDepositSufficient()} and
- *       {@code account.minimumDeposit()}, so any {@link Account} subtype
- *       is substitutable without branching here.</li>
- *   <li><b>DIP</b> — depends on the abstract {@link Account}, not on any
- *       concrete subclass (except for targeted {@code instanceof} checks where
- *       the spec mandates subtype-specific rules).</li>
- * </ul>
- *
- * <p>All methods are {@code static}; the class is stateless and not
- * instantiable.</p>
- */
 public final class FormValidator {
 
     // ── Compiled patterns ────────────────────────────────────────────────────
@@ -73,33 +45,6 @@ public final class FormValidator {
 
     // ── Main entry point ─────────────────────────────────────────────────────
 
-    /**
-     * Validates all fields of the account-opening form.
-     *
-     * <p>Every field is evaluated regardless of whether an earlier field
-     * failed — so the user sees all problems at once, not one at a time.</p>
-     *
-     * @param firstName      raw first name input
-     * @param lastName       raw last name input
-     * @param nin            raw NIN input (will be normalised internally)
-     * @param secondNin      raw second NIN input; ignored unless
-     *                       {@code account} is a {@link JointAccount}
-     * @param email          raw email input
-     * @param confirmEmail   raw confirm-email input
-     * @param phone          raw phone number input
-     * @param pin            raw PIN input (not stored — used for format check
-     *                       and match against {@code confirmPin})
-     * @param confirmPin     raw confirm-PIN input
-     * @param dob            parsed date of birth, or {@code null} if the
-     *                       user left the combo boxes unselected
-     * @param account        the concrete {@link Account} subtype the user
-     *                       selected; must not be {@code null}
-     * @param branch         selected branch display name, or {@code null}/blank
-     *                       if unselected
-     * @param depositText    raw opening deposit input (may contain commas or spaces)
-     * @return {@link ValidationResult} — call {@link ValidationResult#isValid()}
-     *         to check overall outcome
-     */
     public static ValidationResult validate(
             String firstName,
             String lastName,
@@ -133,10 +78,6 @@ public final class FormValidator {
 
     // ── Private field validators ─────────────────────────────────────────────
 
-    /**
-     * Validates a name field (first or last name).
-     * Rule: required, letters only, 2–30 characters.
-     */
     private static void validateName(ValidationResult.Builder b,
                                      String fieldName,
                                      String label,
@@ -150,10 +91,6 @@ public final class FormValidator {
                 label + " must contain letters only, 2–30 characters.");
     }
 
-    /**
-     * Validates the primary NIN.
-     * Rule: required, CM/CF format, exactly 14 uppercase alphanumeric chars.
-     */
     private static void validateNin(ValidationResult.Builder b, String raw) {
         String nin = NinValidator.normalise(raw);
         if (nin.isEmpty()) {
@@ -164,16 +101,7 @@ public final class FormValidator {
                 NinValidator.formatDescription());
     }
 
-    /**
-     * Validates the second (spouse) NIN for Joint accounts.
-     * Rules:
-     * <ul>
-     *   <li>Required only when account type is {@link JointAccount}.</li>
-     *   <li>Must pass the same CM/CF format as the primary NIN.</li>
-     *   <li>Must differ from the primary NIN.</li>
-     * </ul>
-     */
-    private static void validateSecondNin(ValidationResult.Builder b,
+    private static void validateSecondNin(ValidationResult.Builder b, 
                                           String rawSecond,
                                           String rawPrimary,
                                           Account account) {
@@ -198,10 +126,6 @@ public final class FormValidator {
                 "Spouse NIN must differ from the primary applicant's NIN.");
     }
 
-    /**
-     * Validates email and its confirmation field.
-     * Rules: valid format; confirm must match.
-     */
     private static void validateEmail(ValidationResult.Builder b,
                                       String rawEmail,
                                       String rawConfirm) {
@@ -222,10 +146,6 @@ public final class FormValidator {
         }
     }
 
-    /**
-     * Validates the Ugandan phone number.
-     * Rule: must match {@code +256XXXXXXXXX} (13 characters total).
-     */
     private static void validatePhone(ValidationResult.Builder b, String raw) {
         String phone = trim(raw);
         if (phone.isEmpty()) {
@@ -237,15 +157,6 @@ public final class FormValidator {
                 "Must follow the format +256XXXXXXXXX (e.g. +256772123456).");
     }
 
-    /**
-     * Validates the PIN and its confirmation.
-     * Rules:
-     * <ul>
-     *   <li>Numeric only, 4–6 digits.</li>
-     *   <li>Must not be all identical digits (e.g. 0000, 11111).</li>
-     *   <li>Confirm PIN must match PIN.</li>
-     * </ul>
-     */
     private static void validatePin(ValidationResult.Builder b,
                                     String rawPin,
                                     String rawConfirm) {
@@ -268,17 +179,6 @@ public final class FormValidator {
         }
     }
 
-    /**
-     * Validates the date of birth and derived age.
-     * Rules:
-     * <ul>
-     *   <li>DOB must be selected (not {@code null}).</li>
-     *   <li>Must not be a future date.</li>
-     *   <li>General age rule: 18–75 inclusive.</li>
-     *   <li>Student accounts: 18–25 inclusive (checked via
-     *       {@link StudentAccount#isAgeEligible(int)}).</li>
-     * </ul>
-     */
     private static void validateDob(ValidationResult.Builder b,
                                     LocalDate dob,
                                     Account account) {
@@ -315,27 +215,12 @@ public final class FormValidator {
         }
     }
 
-    /**
-     * Validates the branch selection.
-     * Rule: exactly one branch must be selected.
-     */
     private static void validateBranch(ValidationResult.Builder b, String branch) {
         b.addErrorIf(branch == null || trim(branch).isEmpty(),
                 FieldNames.BRANCH,
                 "Please select a branch.");
     }
 
-    /**
-     * Validates the opening deposit against the selected account type's minimum.
-     *
-     * <p>Delegates the minimum lookup and sufficiency check to
-     * {@link Account#minimumDeposit()} and
-     * {@link Account#isDepositSufficient(long)} — no hardcoded amounts here
-     * (DIP / LSP).</p>
-     *
-     * <p>The raw deposit string may contain thousand-separator commas or spaces
-     * (e.g. {@code "50,000"}); these are stripped before parsing.</p>
-     */
     private static void validateDeposit(ValidationResult.Builder b,
                                         String rawDeposit,
                                         Account account) {
@@ -373,24 +258,10 @@ public final class FormValidator {
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    /**
-     * Null-safe trim.
-     *
-     * @param s input string, possibly {@code null}
-     * @return trimmed string, or empty string if {@code s} is {@code null}
-     */
     private static String trim(String s) {
         return s == null ? "" : s.trim();
     }
 
-    /**
-     * Returns {@code true} if every character in {@code s} is the same digit.
-     *
-     * <p>Used to reject trivially weak PINs like 0000, 1111, 999999.</p>
-     *
-     * @param s a non-null, non-empty string
-     * @return {@code true} if all characters are identical
-     */
     private static boolean isAllIdenticalDigits(String s) {
         char first = s.charAt(0);
         for (int i = 1; i < s.length(); i++) {

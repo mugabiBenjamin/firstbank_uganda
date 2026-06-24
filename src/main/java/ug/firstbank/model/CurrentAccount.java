@@ -1,16 +1,5 @@
 package ug.firstbank.model;
 
-/**
- * Concrete account type: <b>Current</b>.
- *
- * <p>Business rules:</p>
- * <ul>
- *   <li>Minimum opening deposit: UGX 200,000</li>
- *   <li>Earns interest: no</li>
- *   <li>Overdraft allowed: yes</li>
- *   <li>Age eligibility: general 18–75 (no special restriction)</li>
- * </ul>
- */
 public final class CurrentAccount extends Account {
 
     /** Minimum opening deposit for a Current account, in UGX. */

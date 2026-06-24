@@ -16,29 +16,6 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Data-access object (DAO) for the {@code accounts} table.
- *
- * <p>Encapsulates all DML (INSERT, SELECT) against the {@code accounts}
- * table. Sequence generation is delegated to {@link SequenceGenerator};
- * connection management is delegated to {@link DatabaseManager}.</p>
- *
- * <p><b>SOLID notes:</b></p>
- * <ul>
- *   <li><b>SRP</b> — owns only account-row persistence. Schema DDL lives in
- *       {@link DatabaseManager}; sequence arithmetic lives in
- *       {@link SequenceGenerator}.</li>
- *   <li><b>OCP</b> — adding a new query (e.g. list all accounts for a branch)
- *       means adding one method; existing methods are untouched.</li>
- *   <li><b>DIP</b> — depends on {@link DatabaseManager} (for {@link Connection})
- *       and {@link SequenceGenerator} (for account numbers), both injected
- *       via constructor rather than instantiated here.</li>
- * </ul>
- *
- * <p>All write operations use manual transaction control
- * ({@code autoCommit=false}) so that the sequence counter increment and the
- * account row INSERT are committed or rolled back atomically.</p>
- */
 public final class AccountRepository {
 
     private static final Logger LOG =
@@ -50,12 +27,6 @@ public final class AccountRepository {
 
     // ── Constructor ──────────────────────────────────────────────────────────
 
-    /**
-     * Constructs an {@code AccountRepository} backed by the given
-     * {@link DatabaseManager}.
-     *
-     * @param dbManager the shared database manager; must not be {@code null}
-     */
     public AccountRepository(DatabaseManager dbManager) {
         if (dbManager == null) throw new IllegalArgumentException(
                 "DatabaseManager must not be null.");
@@ -64,27 +35,6 @@ public final class AccountRepository {
 
     // ── Write operations ─────────────────────────────────────────────────────
 
-    /**
-     * Persists a new account record and returns the generated account number.
-     *
-     * <p>Steps performed inside a single transaction:</p>
-     * <ol>
-     *   <li>Generate the next account number via {@link SequenceGenerator}.</li>
-     *   <li>Insert the full record into {@code accounts}.</li>
-     *   <li>Commit both operations atomically.</li>
-     * </ol>
-     *
-     * <p>The {@code record} object does not carry an account number on entry —
-     * the number is generated here and returned to the caller
-     * ({@code AccountService}), which then builds the final
-     * {@link AccountRecord} with it.</p>
-     *
-     * @param record a fully validated {@link AccountRecord} whose
-     *               {@code accountNumber} field should be the placeholder
-     *               returned by this method
-     * @return the generated account number, e.g. {@code "KLA-2026-000142"}
-     * @throws SQLException if the insert fails or the connection is unavailable
-     */
     public String save(AccountRecord record) throws SQLException {
         Connection conn = dbManager.getConnection();
         boolean originalAutoCommit = conn.getAutoCommit();
@@ -116,19 +66,6 @@ public final class AccountRepository {
 
     // ── Read operations ──────────────────────────────────────────────────────
 
-    /**
-     * Checks whether an account already exists for the given NIN,
-     * account type, and branch combination.
-     *
-     * <p>Used before INSERT to warn the user about likely duplicates —
-     * a realistic guard for a bank's new-account form.</p>
-     *
-     * @param nin         primary NIN (14-char uppercase)
-     * @param accountType account type display name, e.g. {@code "Savings"}
-     * @param branch      branch display name, e.g. {@code "Kampala"}
-     * @return {@code true} if a matching record already exists
-     * @throws SQLException if the query fails
-     */
     public boolean existsDuplicate(String nin, String accountType, String branch)
             throws SQLException {
 
@@ -147,17 +84,6 @@ public final class AccountRepository {
         }
     }
 
-    /**
-     * Looks up an account by its generated account number.
-     *
-     * <p>Returns an {@link Optional} so the UI can handle the not-found
-     * case without catching an exception.</p>
-     *
-     * @param accountNumber the account number to search for,
-     *                      e.g. {@code "KLA-2026-000142"}
-     * @return an {@link Optional} containing the matching record, or empty
-     * @throws SQLException if the query fails
-     */
     public Optional<AccountRecord> findByAccountNumber(String accountNumber)
             throws SQLException {
 
@@ -175,16 +101,6 @@ public final class AccountRepository {
         }
     }
 
-    /**
-     * Looks up all accounts associated with a given primary NIN.
-     *
-     * <p>A single NIN may have opened multiple accounts of different types or
-     * at different branches, so this returns a {@link List}.</p>
-     *
-     * @param nin the primary NIN (14-char uppercase) to search for
-     * @return unmodifiable list of matching records; empty if none found
-     * @throws SQLException if the query fails
-     */
     public List<AccountRecord> findByNin(String nin) throws SQLException {
         String sql = "SELECT * FROM accounts WHERE nin = ? ORDER BY created_at DESC";
 
@@ -203,13 +119,6 @@ public final class AccountRepository {
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    /**
-     * Executes the parameterised INSERT for one account row.
-     *
-     * <p>Column order mirrors the {@code CREATE TABLE} DDL in
-     * {@link DatabaseManager#bootstrapSchema} exactly — any schema change
-     * must be reflected here too.</p>
-     */
     private void insertAccount(Connection conn,
                                 AccountRecord record,
                                 String accountNumber) throws SQLException {
@@ -240,15 +149,6 @@ public final class AccountRepository {
         }
     }
 
-    /**
-     * Maps a {@link ResultSet} row to an {@link AccountRecord}.
-     *
-     * <p>The {@code pin_hash} is carried through as-is — it is never
-     * decrypted or logged.</p>
-     *
-     * <p>The {@code account_number} in the DB is the authoritative number;
-     * it is used as-is without regeneration.</p>
-     */
     private AccountRecord mapRow(ResultSet rs) throws SQLException {
         LocalDate dob = LocalDate.parse(rs.getString("dob")); // YYYY-MM-DD
 
@@ -268,10 +168,6 @@ public final class AccountRepository {
         );
     }
 
-    /**
-     * Attempts a rollback without throwing — used in {@code catch} blocks
-     * where the original exception must not be masked.
-     */
     private void safeRollback(Connection conn) {
         try {
             conn.rollback();
