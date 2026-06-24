@@ -92,7 +92,7 @@ public final class LookupDialog {
 
     private Tab buildNinTab() {
         TextField ninField = new TextField();
-        ninField.setPromptText("e.g. CM63738361TYWS");
+        ninField.setPromptText("e.g. CM12345678ABCD");
 
         Button searchButton = new Button("Search");
         searchButton.setOnAction(e -> searchByNin(ninField.getText()));

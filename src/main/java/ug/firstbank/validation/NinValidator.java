@@ -35,6 +35,6 @@ public final class NinValidator {
 
     public static String formatDescription() {
         return "Must be exactly 14 characters: CM or CF prefix, "
-                + "8 digits, 4 uppercase letters (e.g. CM63738361TYWS).";
+                + "8 digits, 4 uppercase letters (e.g. CM12345678ABCD).";
     }
 }
