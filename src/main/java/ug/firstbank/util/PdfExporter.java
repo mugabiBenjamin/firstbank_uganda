@@ -30,7 +30,7 @@ public final class PdfExporter {
     private static final BaseColor BRAND_PRIMARY   = new BaseColor(0x1A, 0x35, 0x6E);
 
     /** Accent colour — gold, used for table header stripe. */
-    private static final BaseColor BRAND_ACCENT    = new BaseColor(0xC9, 0xA0, 0x2B);
+    // private static final BaseColor BRAND_ACCENT    = new BaseColor(0xC9, 0xA0, 0x2B);
 
     /** Light grey for alternating table rows. */
     private static final BaseColor ROW_ALT         = new BaseColor(0xF5, 0xF5, 0xF5);
