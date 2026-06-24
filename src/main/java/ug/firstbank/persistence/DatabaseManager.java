@@ -125,7 +125,7 @@ public final class DatabaseManager {
                 + "  dob              TEXT(10)       NOT NULL, "   // YYYY-MM-DD
                 + "  account_type     TEXT(20)       NOT NULL, "
                 + "  branch           TEXT(20)       NOT NULL, "
-                + "  opening_deposit  CURRENCY       NOT NULL, "
+                + "  opening_deposit  BIGINT         NOT NULL, "
                 + "  pin_hash         TEXT(80)       NOT NULL, "   // bcrypt 60-char hash
                 + "  created_at       DATETIME       NOT NULL  "
                 + ")");
