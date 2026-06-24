@@ -1,0 +1,139 @@
+.app-root {
+    -fx-background-color: #F4F6F8;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.app-menu-bar {
+    -fx-background-color: #1A356E;
+}
+
+.app-menu-bar .label {
+    -fx-text-fill: white;
+}
+
+.app-menu-bar .menu:hover,
+.app-menu-bar .menu:showing {
+    -fx-background-color: #2A4A8E;
+}
+
+.app-header {
+    -fx-background-color: #1A356E;
+}
+
+.brand-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.brand-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #C9A02B;
+}
+
+.app-content {
+    -fx-background-color: #F4F6F8;
+}
+
+.form-pane {
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-border-color: #DDDDDD;
+    -fx-border-radius: 6;
+    -fx-padding: 20;
+    -fx-min-width: 420;
+    -fx-pref-width: 420;
+}
+
+.form-grid {
+    -fx-padding: 4 0 0 0;
+}
+
+.field-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.field-error {
+    -fx-font-size: 11px;
+    -fx-text-fill: #C0392B;
+}
+
+.form-actions {
+    -fx-padding: 8 0 0 0;
+}
+
+.primary-button {
+    -fx-background-color: #1A356E;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #2A4A8E;
+}
+
+.primary-button:disabled {
+    -fx-background-color: #9AA5B1;
+    -fx-text-fill: #EEEEEE;
+}
+
+.secondary-button {
+    -fx-background-color: white;
+    -fx-text-fill: #1A356E;
+    -fx-border-color: #1A356E;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8 20;
+    -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #EEF1F6;
+}
+
+.secondary-button:disabled {
+    -fx-border-color: #BBBBBB;
+    -fx-text-fill: #BBBBBB;
+}
+
+.summary-pane {
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-border-color: #DDDDDD;
+    -fx-border-radius: 6;
+    -fx-padding: 20;
+}
+
+.summary-heading {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A356E;
+}
+
+.summary-area {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+}
+
+.summary-area .content {
+    -fx-background-color: #FAFAFA;
+}
+
+.summary-actions {
+    -fx-alignment: CENTER_RIGHT;
+    -fx-padding: 8 0 0 0;
+}
+
+.about-dialog {
+    -fx-background-color: white;
+    -fx-alignment: CENTER;
+}
+
+.about-dialog .label {
+    -fx-alignment: CENTER;
+}
