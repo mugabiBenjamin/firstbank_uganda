@@ -61,12 +61,28 @@ public final class DatabaseManager {
             parent.mkdirs();
         }
 
-        String url = "jdbc:ucanaccess://" + dbFile.getAbsolutePath()
-                + ";memory=false"
-                + ";openLinksAsWriteable=true"
-                + ";ignoreCase=true";
+        boolean needsCreation = !dbFile.exists();
 
-        return DriverManager.getConnection(url);
+        StringBuilder url = new StringBuilder("jdbc:ucanaccess://")
+                .append(dbFile.getAbsolutePath())
+                .append(";memory=false")
+                .append(";openLinksAsWriteable=true")
+                .append(";ignoreCase=true");
+
+        if (needsCreation) {
+            // UCanAccess will NOT create a missing .accdb unless explicitly
+            // told which Access file format version to create it in.
+            url.append(";newDatabaseVersion=V2010");
+            LOG.info("Database file does not exist — creating new V2010 .accdb.");
+        }
+
+        Connection conn = DriverManager.getConnection(url.toString());
+
+        if (needsCreation) {
+            LOG.info("New database file created: " + dbFile.getAbsolutePath());
+        }
+
+        return conn;
     }
 
     private File resolveDbFile() {
