@@ -83,7 +83,7 @@ mvn clean package
 ### 3. Run the Application
 
 ```bash
-mvn javafx:run
+mvn clean javafx:run
 # Or run the generated JAR:
 java -jar target/firstbank_uganda-1.0.0.jar
 
