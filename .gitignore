@@ -29,3 +29,5 @@ Thumbs.db
 *.lck
 *.tmp
 .github/
+
+*repomix-output.xml
