@@ -112,11 +112,8 @@ public final class DatabaseManager {
     }
 
     private void bootstrapSchema(Connection conn) throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
-
-            // ── accounts table ───────────────────────────────────────────────
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS accounts ("
+        createTableIfMissing(conn, "accounts",
+                "CREATE TABLE accounts ("
                 + "  id               AUTOINCREMENT  PRIMARY KEY, "
                 + "  account_number   TEXT(20)       NOT NULL, "
                 + "  first_name       TEXT(50)       NOT NULL, "
@@ -131,22 +128,35 @@ public final class DatabaseManager {
                 + "  opening_deposit  CURRENCY       NOT NULL, "
                 + "  pin_hash         TEXT(80)       NOT NULL, "   // bcrypt 60-char hash
                 + "  created_at       DATETIME       NOT NULL  "
-                + ")"
-            );
+                + ")");
 
-            // ── account_seq table ────────────────────────────────────────────
-            // No IF NOT EXISTS for CONSTRAINT in UCanAccess DDL; the table-level
-            // CREATE TABLE IF NOT EXISTS guard is sufficient.
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS account_seq ("
+        createTableIfMissing(conn, "account_seq",
+                "CREATE TABLE account_seq ("
                 + "  id           AUTOINCREMENT  PRIMARY KEY, "
                 + "  branch_code  TEXT(5)        NOT NULL, "
                 + "  seq_year     INTEGER        NOT NULL, "
                 + "  last_seq     INTEGER        NOT NULL    "   // DEFAULT 0 via INSERT
-                + ")"
-            );
+                + ")");
 
-            LOG.info("Schema bootstrap complete.");
+        LOG.info("Schema bootstrap complete.");
+    }
+
+    private void createTableIfMissing(Connection conn,
+                                      String tableName,
+                                      String createSql) throws SQLException {
+        if (tableExists(conn, tableName)) {
+            LOG.fine(() -> "Table already exists, skipping creation: " + tableName);
+            return;
+        }
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(createSql);
+            LOG.info("Created table: " + tableName);
+        }
+    }
+
+    private boolean tableExists(Connection conn, String tableName) throws SQLException {
+        try (var rs = conn.getMetaData().getTables(null, null, tableName, null)) {
+            return rs.next();
         }
     }
 }
