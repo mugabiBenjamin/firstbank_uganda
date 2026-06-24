@@ -87,13 +87,16 @@ public final class MainWindow {
     private MenuBar buildMenuBar() {
         Menu accountMenu = new Menu("Account");
         MenuItem lookupItem = new MenuItem("Find Account…");
+        lookupItem.setStyle("-fx-text-fill: black;");
         lookupItem.setOnAction(e -> openLookupDialog());
         MenuItem exitItem = new MenuItem("Exit");
+        exitItem.setStyle("-fx-text-fill: black;");
         exitItem.setOnAction(e -> stage.close());
         accountMenu.getItems().addAll(lookupItem, exitItem);
 
         Menu helpMenu = new Menu("Help");
         MenuItem aboutItem = new MenuItem("About First Bank Uganda");
+        aboutItem.setStyle("-fx-text-fill: black;");
         aboutItem.setOnAction(e -> new AboutDialog(stage).showAndWait());
         helpMenu.getItems().add(aboutItem);
 
